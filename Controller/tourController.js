@@ -164,11 +164,12 @@ exports.getMonthlyPlan = async (req, res) => {
       },
       { $limit: 6 },
     ]);
+    if (plans.length <= 0) throw new Error("No tour found in that plan");
     res.status(StatusCodes.GONE).json({
       status: "Success",
       plans,
     });
   } catch (err) {
-    res.status(StatusCodes.NOT_FOUND).json({ msg: err });
+    res.status(StatusCodes.NOT_FOUND).json({ msg: err.message });
   }
 };
