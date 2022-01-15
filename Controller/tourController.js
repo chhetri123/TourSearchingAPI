@@ -1,52 +1,23 @@
 const { StatusCodes } = require("http-status-codes");
 
 const Tour = require("./../model/tourModels");
+const ApiFeatures = require("../utils/apiFeature");
 exports.bestTours = async (req, res, next) => {
   req.query.limit = "5";
   req.query.sort = "-ratingsAverage,price";
   req.query.fields = "name,ratingsAverage,price,summary,difficulty";
   next();
 };
+
 exports.getAllTours = async (req, res) => {
   try {
-    // const tours = await Tour.find();
+    const apiFeatures = new ApiFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pagination();
 
-    const queryObj = { ...req.query };
-    const excludedField = ["page", "sort", "limit", "fields"];
-    excludedField.forEach((field) => delete queryObj[field]);
-
-    // Advance level filtering
-    queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|lte|gt|lt)\b/g, (match) => `$${match}`);
-    // //
-    const query = Tour.find(JSON.parse(queryStr));
-
-    // 1)Sorting
-    if (req.query.sort) {
-      const querySort = req.query.sort.split(",").join(" ");
-      query.sort(querySort);
-    } else {
-      query.sort("-createdAt");
-    }
-
-    // 2)Field limits
-    if (req.query.fields) {
-      const queryFields = req.query.fields.split(",").join(" ");
-      query.select(queryFields);
-    } else {
-      query.select("-__v");
-    }
-
-    // 3) Pagination
-    const page = +req.query.page || 1;
-    const limit = +req.query.limit || 100;
-    const skip = (page - 1) * limit;
-    query.skip(skip).limit(limit);
-    if (req.query.page) {
-      const totalTours = await Tour.countDocuments();
-      if (skip >= totalTours) throw new Error("Page limit exceeds");
-    }
-    const tours = await query;
+    const tours = await apiFeatures.query;
     res.status(StatusCodes.OK).send({
       results: tours.length,
       tours,
