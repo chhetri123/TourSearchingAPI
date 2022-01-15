@@ -6,6 +6,8 @@ const tourController = require("../Controller/tourController.js");
 router
   .route("/top-5-tours")
   .get(tourController.bestTours, tourController.getAllTours);
+router.route("/tourStats").get(tourController.getTourStats);
+router.route("/monthlyPlan/:year").get(tourController.getMonthlyPlan);
 router
   .route("/")
   .get(tourController.getAllTours)
