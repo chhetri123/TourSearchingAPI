@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
-    "start:prod": "NODE_ENV = production nodemon server.js"
+    "start:prod": "SET NODE_ENV=production&nodemon server.js",
+    "debug": "ndb server.js"
   },
   "author": "chhetri",
   "license": "ISC",
@@ -16,5 +17,8 @@
     "mongoose": "^5.13.14",
     "morgan": "^1.10.0",
     "validator": "^13.7.0"
+  },
+  "devDependencies": {
+    "ndb": "^1.1.5"
   }
 }

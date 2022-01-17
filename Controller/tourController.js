@@ -2,7 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const Tour = require("./../model/tourModels");
 const ApiFeatures = require("../utils/apiFeature");
 const catchAsync = require("./../utils/catchAsync");
-const AppError = require("../utils/appError");
+const AppError = require("./../utils/appError");
 exports.bestTours = async (req, res, next) => {
   req.query.limit = "5";
   req.query.sort = "-ratingsAverage,price";
@@ -26,13 +26,19 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 
 exports.createTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.create(req.body);
-  res.status(StatusCodes.CREATED).send(tour);
+  if (!tour) return next(new AppError("Tour cannot be created", 404));
+
+  res.status(StatusCodes.CREATED).json(tour);
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findById(req.params.id);
+  if (!tour)
+    return next(
+      new AppError("Tour not found with that ID", StatusCodes.NOT_FOUND)
+    );
 
-  res.status(StatusCodes.MOVED_TEMPORARILY).send(tour);
+  res.status(StatusCodes.OK).send(tour);
 });
 
 exports.updateTour = catchAsync(async (req, res, next) => {
@@ -40,13 +46,17 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true,
   });
+  if (!tour) return next(new AppError("Tour cannot be created", 404));
+
   res.status(StatusCodes.OK).send({
     tour,
   });
 });
 
 exports.deleteTour = catchAsync(async (req, res, next) => {
-  await Tour.findByIdAndDelete(req.params.id);
+  const tour = await Tour.findByIdAndDelete(req.params.id);
+  if (!tour) return next(new AppError("Tour cannot be created", 404));
+
   res.status(StatusCodes.GONE).json({ message: "tour deleted " });
 });
 exports.getTourStats = catchAsync(async (req, res) => {
