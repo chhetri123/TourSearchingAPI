@@ -55,7 +55,7 @@ exports.updateTour = catchAsync(async (req, res, next) => {
 
 exports.deleteTour = catchAsync(async (req, res, next) => {
   const tour = await Tour.findByIdAndDelete(req.params.id);
-  if (!tour) return next(new AppError("Tour cannot be created", 404));
+  if (!tour) return next(new AppError("Tour not found", 404));
 
   res.status(StatusCodes.GONE).json({ message: "tour deleted " });
 });
@@ -79,7 +79,7 @@ exports.getTourStats = catchAsync(async (req, res) => {
     },
     // { $match: { _id: { $ne: "easy" } } },
   ]);
-  res.status(StatusCodes.GONE).json({
+  res.status(StatusCodes.OK).json({
     status: "Success",
     stats,
   });
@@ -119,8 +119,11 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     },
     { $limit: 6 },
   ]);
-  if (plans.length <= 0) throw new Error("No tour found in that plan");
-  res.status(StatusCodes.GONE).json({
+  if (plans.length <= 0)
+    return next(
+      new AppError("No tour found in that plan", StatusCodes.NOT_FOUND)
+    );
+  res.status(StatusCodes.OK).json({
     status: "Success",
     plans,
   });
