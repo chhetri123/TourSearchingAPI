@@ -10,8 +10,15 @@ const signToken = (id) => {
   });
 };
 exports.signup = catchAsync(async (req, res) => {
-  const { name, email, password, passwordConform, photo, changePasswordAt } =
-    req.body;
+  const {
+    name,
+    email,
+    role,
+    password,
+    passwordConform,
+    photo,
+    changePasswordAt,
+  } = req.body;
   const newUser = await User.create({
     name,
     email,
@@ -19,6 +26,7 @@ exports.signup = catchAsync(async (req, res) => {
     passwordConform,
     photo,
     changePasswordAt,
+    role,
   });
   const token = signToken(newUser._id);
 
@@ -89,3 +97,18 @@ exports.protect = catchAsync(async (req, res, next) => {
   // req.user=
   next();
 });
+exports.restrictTo = (...roles) => {
+  // roles=["admin","lead-guide"]
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError(
+          "You do not have permission to delete Tour",
+          StatusCodes.FORBIDDEN
+        )
+      );
+    }
+
+    next();
+  };
+};
