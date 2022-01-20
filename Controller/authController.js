@@ -1,12 +1,26 @@
+const crypto = require("crypto");
 const User = require("./../model/userModel");
 const catchAsync = require("./../utils/catchAsync");
 const AppError = require("./../utils/appError");
+const sendMail = require("./../utils/email");
 const { StatusCodes } = require("http-status-codes");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
+
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: "Success",
+    token,
+    data: {
+      user,
+    },
   });
 };
 exports.signup = catchAsync(async (req, res) => {
@@ -28,15 +42,8 @@ exports.signup = catchAsync(async (req, res) => {
     changePasswordAt,
     role,
   });
-  const token = signToken(newUser._id);
 
-  res.status(StatusCodes.CREATED).json({
-    status: "Success",
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendToken(newUser, StatusCodes.CREATED, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -50,17 +57,12 @@ exports.login = catchAsync(async (req, res, next) => {
     );
   }
   // create token and send
-  const token = signToken(user._id);
-  res.status(StatusCodes.OK).json({
-    status: "Success",
-    token,
-  });
+  createSendToken(user, StatusCodes.ACCEPTED, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
   // getting token and check of it is valid?
   let token;
-  console.log(req.headers);
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
@@ -112,3 +114,103 @@ exports.restrictTo = (...roles) => {
     next();
   };
 };
+exports.forgetPassword = catchAsync(async (req, res, next) => {
+  // get user from POSTED email address
+  const user = await User.findOne({ email: req.body.email });
+  if (!user)
+    return next(
+      new AppError(
+        "User doesn't exist in this Email address",
+        StatusCodes.NOT_FOUND
+      )
+    );
+
+  // Generate random token
+  try {
+    const resetToken = user.createResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+    // Send it to the mail,
+    const resetURL = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/users/resetPassword/${resetToken}`;
+
+    // message
+    const message = `Forget your password ? Submit a Update request with your new password and passwordConform to :${resetURL}.\n If you didn't forget your password , please ignore this email`;
+
+    // send mail
+    await sendMail({ message, email: user.email });
+    console.log(resetURL);
+    res.status(StatusCodes.OK).json({
+      status: "Success",
+      message: "Reset token sent in your email address",
+    });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordTokenExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(
+      new AppError(
+        "There was an error sending a mail. Please try again later",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
+  }
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const resetToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+  const user = await User.findOne({
+    resetPasswordToken: resetToken,
+    resetPasswordTokenExpires: { $gt: Date.now() },
+  });
+
+  if (!user)
+    return next(
+      new AppError("Invalid token or token epired", StatusCodes.NOT_FOUND)
+    );
+
+  user.password = req.body.password;
+  user.passwordConform = req.body.passwordConform;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordTokenExpires = undefined;
+  await user.save();
+
+  createSendToken(user, StatusCodes.OK, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // Get user from collection
+  const { currentPassword, password, passwordConform } = req.body;
+
+  const user = await User.findById(req.user._id).select("+password");
+
+  // check if posted password is correct or not
+  const isCorrectPassword = await user.correctPassword(
+    currentPassword,
+    user.password
+  );
+  if (!isCorrectPassword) {
+    return next(
+      new AppError("Current password is incorrect"),
+      StatusCodes.UNAUTHORIZED
+    );
+  }
+  if (currentPassword === password)
+    return next(
+      new AppError(
+        "New Password Cannot be same as OldPassword .Please enter different password",
+        StatusCodes.BAD_REQUEST
+      )
+    );
+
+  // update password
+
+  user.password = password;
+  user.passwordConform = passwordConform;
+  await user.save();
+  // log user in jwt
+  createSendToken(user, StatusCodes.OK, res);
+});
