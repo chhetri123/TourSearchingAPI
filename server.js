@@ -13,7 +13,23 @@ mongoose
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("db connected successfully"));
-app.listen(port, () => {
+  .then(() => console.log("db connected successfully"))
+  .catch();
+
+const server = app.listen(port, () => {
   console.log(`App running in port ${port}`);
+});
+
+// this runs when unhandle promise rejection is found in the code
+// Like while connecting DB if pass is incorrect than mongoose throw rejection promise which if unhandled than this block of code runs
+process.on("unhandledRejection", (err) => {
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+process.on("uncaughtException", (err) => {
+  console.log(err.name, err.message);
+  process.exit();
 });
