@@ -115,7 +115,7 @@ exports.restrictTo = (...roles) => {
     if (!roles.includes(req.user.role)) {
       return next(
         new AppError(
-          "You do not have permission to delete Tour",
+          "You do not have permission to do this action",
           StatusCodes.FORBIDDEN
         )
       );

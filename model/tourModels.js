@@ -78,10 +78,37 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: "Point",
+        enum: ["Point"],
+      },
+      coordinates: [Number],
+      description: String,
+      address: String,
+    },
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+      },
+    ],
+    locations: [
+      {
+        type: {
+          type: "String",
+          default: "Point",
+          enum: ["Point"],
+        },
+        coordinates: [Number],
+        day: Number,
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
-    toObject: { virtual: true },
+    toObject: { virtuals: true },
   }
 );
 // Adding virtual properties
@@ -97,6 +124,13 @@ tourSchema.pre("save", function (next) {
   next();
 });
 
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "guides",
+    select: "-__v -changePasswordAt",
+  });
+  next();
+});
 tourSchema.post("save", function (docs, next) {
   // console.log(docs);
   next();

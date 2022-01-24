@@ -10,6 +10,7 @@ const hpp = require("hpp");
 // modules require
 const tourRoutes = require("./routes/tourRoutes");
 const userRoutes = require("./routes/userRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./Controller/errorController");
 
@@ -50,6 +51,7 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 app.use("/api/v1/tours", tourRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
 app.all("*", (req, res, next) => {
   next(
     new AppError(
