@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 const reviewController = require("../Controller/reviewController");
 const authController = require("../Controller/authController");
 
@@ -11,5 +11,6 @@ router
     authController.restrictTo("user"),
     reviewController.createReview
   );
+// POST /:tourID/reviews
 
 module.exports = router;

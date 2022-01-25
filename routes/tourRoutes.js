@@ -3,7 +3,12 @@ const router = express.Router();
 const authController = require("./../Controller/authController");
 
 const tourController = require("../Controller/tourController.js");
+const reviewRoutes = require("./reviewRoutes");
 // router.param("id", tourController.checkId);
+
+// nested route middleware for tour and review
+router.use("/:tourID/reviews", reviewRoutes);
+
 router
   .route("/top-5-tours")
   .get(tourController.bestTours, tourController.getAllTours);
@@ -23,4 +28,5 @@ router
     authController.restrictTo("admin", "lead-guide"),
     tourController.deleteTour
   );
+
 module.exports = router;
