@@ -45,7 +45,7 @@ exports.updateOne = (Model) =>
 
 exports.getOne = (Model, popOption) =>
   catchAsync(async (req, res, next) => {
-    const query = Model.findById(req.params.id);
+    let query = Model.findById(req.params.id);
     if (popOption) query = query.populate(popOption);
     const doc = await query;
     if (!doc)

@@ -137,10 +137,7 @@ tourSchema.pre(/^find/, function (next) {
   });
   next();
 });
-tourSchema.post("save", function (docs, next) {
-  // console.log(docs);
-  next();
-});
+
 // 2)Query middleware
 tourSchema.pre(/^find/, function (next) {
   this.find({
@@ -148,11 +145,6 @@ tourSchema.pre(/^find/, function (next) {
       $ne: true,
     },
   });
-  next();
-});
-
-tourSchema.post(/^find/, function (docs, next) {
-  // console.log(docs);
   next();
 });
 
