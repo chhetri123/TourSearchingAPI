@@ -18,10 +18,12 @@ router
   .get(reviewController.getReview)
   .patch(
     authController.restrictTo("user", "admin"),
+    reviewController.isReview,
     reviewController.updateReview
   )
   .delete(
     authController.restrictTo("user", "admin"),
+    reviewController.isReview,
     reviewController.deleteReview
   );
 // POST /:tourID/reviews
