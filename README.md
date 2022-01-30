@@ -1,7 +1,9 @@
 ### **TourSearchingAPI**
 
-This is tour API . By using this API , you can find the best place to visit nearer from your location. And you can bookmark ,review ,rate location .
+This is tour API . In this API there are special inpoints that  you can find the best place to visit nearer from your location. And you can get all tours , create new one ,and edit and delete tours .There are also special endpoints requirement like authentication , authorization etc .
 
-(not completed yet)
 
-Many more to build
+**Documentation**
+
+Here is a complete documentation of 
+[this API ](https://documenter.getpostman.com/view/12338784/UVeCQTfE)
