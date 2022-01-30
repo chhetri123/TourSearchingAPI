@@ -1,6 +1,6 @@
 ### **TourSearchingAPI**
 
-This is tour API . In this API there are special inpoints that  you can find the best place to visit nearer from your location. And you can get all tours , create new one ,and edit and delete tours .There are also special endpoints requirement like authentication , authorization etc .
+This is tour API . In this API there are special endpoints that  you can find the best place to visit nearer from your location. And you can get all tours , create new one ,and edit and delete tours .There are also special endpoints requirement like authentication , authorization etc .
 
 
 **Documentation**
