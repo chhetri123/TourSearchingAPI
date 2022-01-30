@@ -36,7 +36,8 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: [1.0, "Rating must be greater than equal  to 1.0"],
-      maxx: [5.0, "Rating must be less than equal to 5.0"],
+      max: [5.0, "Rating must be less than equal to 5.0"],
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingQuantity: {
       type: Number,
@@ -78,18 +79,54 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: "Point",
+        enum: ["Point"],
+      },
+      coordinates: [Number],
+      description: String,
+      address: String,
+    },
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+      },
+    ],
+    locations: [
+      {
+        type: {
+          type: "String",
+          default: "Point",
+          enum: ["Point"],
+        },
+        coordinates: [Number],
+        day: Number,
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
-    toObject: { virtual: true },
+    toObject: { virtuals: true },
   }
 );
 // Adding virtual properties
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: "2dsphere" });
 tourSchema.virtual("durationInWeeks").get(function () {
   // this "this" represent the whole document
   return this.duration / 7;
 });
 
+tourSchema.virtual("reviews", {
+  ref: "Review",
+  foreignField: "tour",
+  localField: "_id",
+  // justOne: true,
+});
 // Mongoose Middleware
 // 1) Document middleware
 tourSchema.pre("save", function (next) {
@@ -97,10 +134,14 @@ tourSchema.pre("save", function (next) {
   next();
 });
 
-tourSchema.post("save", function (docs, next) {
-  // console.log(docs);
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "guides",
+    select: "-__v -changePasswordAt",
+  });
   next();
 });
+
 // 2)Query middleware
 tourSchema.pre(/^find/, function (next) {
   this.find({
@@ -111,19 +152,16 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.post(/^find/, function (docs, next) {
-  // console.log(docs);
-  next();
-});
-
 // 3) aggregate middleware
 
 tourSchema.pre("aggregate", function (next) {
-  this.pipeline().unshift({
-    $match: {
-      secretTour: { $ne: true },
-    },
-  });
+  if (!Object.keys(this.pipeline()[0]).includes("$geoNear")) {
+    this.pipeline().unshift({
+      $match: {
+        secretTour: { $ne: true },
+      },
+    });
+  }
   next();
 });
 
