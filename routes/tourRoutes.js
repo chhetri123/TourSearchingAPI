@@ -21,6 +21,13 @@ router
     tourController.getMonthlyPlan
   );
 router
+  .route("/tours-within/:distance/center/:latlon/unit/:unit")
+  .get(tourController.toursWithin);
+
+router
+  .route("/distances/:latlon/unit/:unit")
+  .get(tourController.toursWithinDistance);
+router
   .route("/")
   .get(tourController.getAllTours)
   .post(

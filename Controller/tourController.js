@@ -87,3 +87,66 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     plans,
   });
 });
+exports.toursWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlon, unit } = req.params;
+  const radius = unit === "mi" ? distance / 3963.2 : distance / 6378.1;
+  const [lat, lon] = latlon.split(",");
+  if (!lat || !lon) {
+    next(
+      new AppError("Please provide lat and lon in format of lat,lon"),
+      StatusCodes.BAD_REQUEST
+    );
+  }
+  const tours = await Tour.find({
+    startLocation: {
+      $geoWithin: {
+        $centerSphere: [[lon, lat], radius],
+      },
+    },
+  });
+  res.status(StatusCodes.OK).json({
+    status: "Success",
+    result: tours.length,
+    data: {
+      data: tours,
+    },
+  });
+});
+exports.toursWithinDistance = catchAsync(async (req, res, next) => {
+  const { latlon, unit } = req.params;
+  const multiplier = unit === "mi" ? 0.000621371 : 0.001;
+  const [lat, lon] = latlon.split(",");
+  if (!lat || !lon) {
+    next(
+      new AppError("Please provide lat and lon in format of lat,lon"),
+      StatusCodes.BAD_REQUEST
+    );
+  }
+
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: "Point",
+          coordinates: [+lon, +lat],
+        },
+        distanceField: "distance",
+        distanceMultiplier: multiplier,
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+        ratingsAverage: 1,
+      },
+    },
+  ]);
+  res.status(StatusCodes.OK).json({
+    status: "Success",
+    result: distances.length,
+    data: {
+      data: distances,
+    },
+  });
+});

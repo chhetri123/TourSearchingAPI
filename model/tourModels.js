@@ -115,6 +115,7 @@ const tourSchema = new mongoose.Schema(
 // Adding virtual properties
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: "2dsphere" });
 tourSchema.virtual("durationInWeeks").get(function () {
   // this "this" represent the whole document
   return this.duration / 7;
@@ -154,11 +155,13 @@ tourSchema.pre(/^find/, function (next) {
 // 3) aggregate middleware
 
 tourSchema.pre("aggregate", function (next) {
-  this.pipeline().unshift({
-    $match: {
-      secretTour: { $ne: true },
-    },
-  });
+  if (!Object.keys(this.pipeline()[0]).includes("$geoNear")) {
+    this.pipeline().unshift({
+      $match: {
+        secretTour: { $ne: true },
+      },
+    });
+  }
   next();
 });
 
