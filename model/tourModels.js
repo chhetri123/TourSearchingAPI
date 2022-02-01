@@ -130,7 +130,7 @@ tourSchema.virtual("reviews", {
 // Mongoose Middleware
 // 1) Document middleware
 tourSchema.pre("save", function (next) {
-  this.slug = this.name.toLowerCase();
+  this.slug = this.name.toLowerCase().replaceAll(" ", "-");
   next();
 });
 
