@@ -12,6 +12,7 @@ const path = require("path");
 const tourRoutes = require("./routes/tourRoutes");
 const userRoutes = require("./routes/userRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const viewRoutes = require("./routes/viewRoutes");
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./Controller/errorController");
 
@@ -52,13 +53,7 @@ const limiter = rateLimit({
 });
 
 // Routes for Server-side
-app.get("/", (req, res) => {
-  res.status(200).render("base", {
-    tours: "Adhikhola tour",
-    user: "Manish chhetri",
-  });
-});
-
+app.use("/", viewRoutes);
 // Route Middleware (API routes )
 app.use("/api", limiter);
 app.use("/api/v1/tours", tourRoutes);
