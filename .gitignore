@@ -4,4 +4,4 @@ package-lock.json
 data_import_to_DB.js
 *.html 
 *.json
-public/js
+
