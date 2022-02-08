@@ -103,6 +103,7 @@ const tourSchema = new mongoose.Schema(
           enum: ["Point"],
         },
         coordinates: [Number],
+        description: String,
         day: Number,
       },
     ],
