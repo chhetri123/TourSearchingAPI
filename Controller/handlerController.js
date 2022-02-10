@@ -20,7 +20,7 @@ exports.createOne = (Model) =>
     if (!doc) return next(new AppError("Document  cannot be created", 404));
 
     res.status(StatusCodes.CREATED).json({
-      status: "Success",
+      status: "success",
       data: {
         data: doc,
       },
@@ -73,7 +73,7 @@ exports.getAll = (Model) =>
 
     const docs = await apiFeatures.query;
     res.status(StatusCodes.OK).json({
-      status: "Success",
+      status: "success",
       results: docs.length,
       data: {
         data: docs,
