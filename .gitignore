@@ -1,4 +1,7 @@
 node_modules
 *.env
-public/
 package-lock.json
+data_import_to_DB.js
+*.html 
+*.json
+

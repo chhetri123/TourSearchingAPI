@@ -26,7 +26,7 @@ const createSendToken = (user, statusCode, res) => {
   res.cookie("jwt", token, cookiesOption);
 
   res.status(statusCode).json({
-    status: "Success",
+    status: "success",
     token,
     data: {
       user,
@@ -73,11 +73,14 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.protect = catchAsync(async (req, res, next) => {
   // getting token and check of it is valid?
   let token;
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   if (!token)
     return next(
@@ -106,9 +109,46 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   // next
   req.user = currentUser;
+  res.locals.user = currentUser;
   // req.user=
   next();
 });
+exports.logout = (req, res) => {
+  res.cookie("jwt", "loggedout", {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: "success" });
+};
+exports.isLoggedIn = async (req, res, next) => {
+  // getting token and check of it is valid?
+  try {
+    if (req.cookies.jwt) {
+      // verification token
+
+      const decode = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET_KEY
+      );
+      // check if user still exixts
+      const currentUser = await User.findById(decode.id);
+      if (!currentUser) return next();
+
+      // check if user changed password after the token issued
+      const isChanged = currentUser.changePasswordAfter(decode.iat);
+      if (isChanged) {
+        return next();
+      }
+      // next
+      res.locals.user = currentUser;
+      // req.user=
+      return next();
+    }
+    next();
+  } catch (err) {
+    return next();
+  }
+};
 exports.restrictTo = (...roles) => {
   // roles=["admin","lead-guide"]
   return (req, res, next) => {
@@ -151,7 +191,7 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
     await sendMail({ message, email: user.email });
     console.log(resetURL);
     res.status(StatusCodes.OK).json({
-      status: "Success",
+      status: "success",
       message: "Reset token sent in your email address",
     });
   } catch (err) {
