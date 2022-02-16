@@ -9027,6 +9027,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+// Use published key of Stripe
 var stripe = Stripe("pk_test_51KTQdlKIacAI6ryqRTTRiLuvwSPLvPpi6wk6VkgbqpzWeQFsofjqzerz0PK3WLjxZpx6GQ5V9o8TcAXXne4wVMWe00dVpjQStI");
 
 var bookTour = /*#__PURE__*/function () {
@@ -9045,26 +9046,42 @@ var bookTour = /*#__PURE__*/function () {
 
           case 3:
             session = _context.sent;
-            console.log(session); // 2) Create checkout form + charge credit card
 
-            console.log(stripe); // await stripe.redirectToCheckout({ sessionId: session.data.session.id });
+            if (!("development" === "production")) {
+              _context.next = 9;
+              break;
+            }
 
-            window.open(session.data.session.url, "_blank");
-            _context.next = 13;
+            _context.next = 7;
+            return stripe.redirectToCheckout({
+              sessionId: session.data.session.id
+            });
+
+          case 7:
+            _context.next = 10;
             break;
 
           case 9:
-            _context.prev = 9;
+            if ("development" === "development") {
+              window.open(session.data.session.url, "_blank"); // For development mode
+            }
+
+          case 10:
+            _context.next = 16;
+            break;
+
+          case 12:
+            _context.prev = 12;
             _context.t0 = _context["catch"](0);
             console.log(_context.t0);
             (0, _alerts.showAlert)("error", _context.t0.message);
 
-          case 13:
+          case 16:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, null, [[0, 9]]);
+    }, _callee, null, [[0, 12]]);
   }));
 
   return function bookTour(_x) {
@@ -9472,7 +9489,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61986" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59354" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
