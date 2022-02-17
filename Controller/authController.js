@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const User = require("./../model/userModel");
 const catchAsync = require("./../utils/catchAsync");
 const AppError = require("./../utils/appError");
-const sendMail = require("./../utils/email");
+const Email = require("./../utils/email");
 const { StatusCodes } = require("http-status-codes");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
@@ -52,7 +52,9 @@ exports.signup = catchAsync(async (req, res) => {
     changePasswordAt,
     role,
   });
-
+  const url = `${req.protocol}://${req.get("host")}/user/me`;
+  console.log(url);
+  await new Email(newUser, url).sendWelcome();
   createSendToken(newUser, StatusCodes.CREATED, res);
 });
 
@@ -184,11 +186,7 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
       "host"
     )}/api/v1/users/resetPassword/${resetToken}`;
 
-    // message
-    const message = `Forget your password ? Submit a Update request with your new password and passwordConform to :${resetURL}.\n If you didn't forget your password , please ignore this email`;
-
-    // send mail
-    await sendMail({ message, email: user.email });
+    await new Email(user, resetURL).sendPasswordReset();
     console.log(resetURL);
     res.status(StatusCodes.OK).json({
       status: "success",
